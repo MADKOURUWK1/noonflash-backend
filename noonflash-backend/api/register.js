@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-// IMPORTANT: Vercel will provide these values from your settings
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
-  // Allow requests from any origin (for your extension)
+  // --- CORS PREFLIGHT HANDLING ---
+  // This is the important part. It explicitly handles the OPTIONS request.
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -14,6 +14,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+  // --- END CORS PREFLIGHT HANDLING ---
   
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
@@ -32,8 +33,7 @@ export default async function handler(req, res) {
       .single();
 
     if (error) {
-      // 23505 is the error code for a unique constraint violation (email already exists)
-      if (error.code === '23505') {
+      if (error.code === '23505') { // Email already exists
         return res.status(200).json({ success: true, message: 'Email already registered.' });
       }
       throw error;
