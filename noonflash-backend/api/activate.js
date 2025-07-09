@@ -5,15 +5,10 @@ const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
-  // --- CORS PREFLIGHT HANDLING ---
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
   }
-  // --- END CORS PREFLIGHT HANDLING ---
   
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
@@ -34,11 +29,14 @@ export default async function handler(req, res) {
       .single();
 
     if (error || !data) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
       return res.status(404).json({ success: false, message: 'Invalid email or license key.' });
     }
 
+    res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json({ success: true, status: 'full' });
   } catch (error) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(500).json({ success: false, message: error.message });
   }
 }
