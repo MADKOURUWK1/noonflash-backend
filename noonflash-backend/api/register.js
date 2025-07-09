@@ -1,45 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
+export default function handler(req, res) {
+  // Set CORS headers so the browser allows the request
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-// --- DEFENSIVE CHECK FOR ENVIRONMENT VARIABLES ---
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
-  throw new Error('CRITICAL: SUPABASE_URL or SUPABASE_KEY environment variables are not set!');
-}
+  // Check if the environment variables exist on the server
+  const urlExists = !!process.env.SUPABASE_URL;
+  const keyExists = !!process.env.SUPABASE_KEY;
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
-export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-  
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
-
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ message: 'Email is required.' });
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .insert([{ email: email, license_type: 'trial' }])
-      .select()
-      .single();
-
-    if (error) {
-      if (error.code === '23505') {
-        return res.status(200).json({ success: true, message: 'Email already registered.' });
-      }
-      throw error;
-    }
-
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(200).json({ success: true, status: 'trial' });
-  } catch (error) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(500).json({ success: false, message: error.message });
-  }
+  // Report the findings back
+  res.status(200).json({
+    message: "Vercel Environment Variable Inspector Result",
+    url_variable_found: urlExists,
+    key_variable_found: keyExists,
+    vercel_region: process.env.VERCEL_REGION || "Not set"
+  });
 }
