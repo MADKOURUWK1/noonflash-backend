@@ -1,11 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// --- DEFENSIVE CHECK FOR ENVIRONMENT VARIABLES ---
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+  throw new Error('CRITICAL: SUPABASE_URL or SUPABASE_KEY environment variables are not set!');
+}
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 export default async function handler(req, res) {
-  // This handles the browser's preflight check
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
@@ -28,13 +30,12 @@ export default async function handler(req, res) {
       .single();
 
     if (error) {
-      if (error.code === '23505') { // Email already exists
+      if (error.code === '23505') {
         return res.status(200).json({ success: true, message: 'Email already registered.' });
       }
       throw error;
     }
 
-    // Add CORS headers to the actual response
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json({ success: true, status: 'trial' });
   } catch (error) {
