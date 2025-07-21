@@ -17,21 +17,18 @@ export default async function handler(req, res) {
   if (!email) return res.status(400).json({ message: 'Email is required.' });
 
   try {
+    // The service role key bypasses RLS.
     const { data, error } = await supabase
       .from('users')
-      .select('license_type, trial_ends_at') // Include trial_ends_at
+      .select('license_type')
       .eq('email', email)
       .single();
 
     if (error || !data) {
       return res.status(404).json({ license: 'not_found' });
     }
-    return res.status(200).json({ 
-      license: data.license_type, 
-      trial_ends_at: data.trial_ends_at // Return the trial end date
-    });
+    return res.status(200).json({ license: data.license_type });
   } catch (error) {
-    console.error("Status API error:", error);
     return res.status(500).json({ message: error.message });
   }
 }
